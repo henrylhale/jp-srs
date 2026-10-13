@@ -2,7 +2,7 @@ import { html, mount, $, toast, fmtDuration } from '../util.js';
 import { state, fsrsConfig } from '../store.js';
 import { grade, preview, State } from '../fsrs.js';
 import * as db from '../db.js';
-import { dueCards, orderReviews, reviewsLeftToday } from '../queue.js';
+import { dueCards, orderReviews, reviewsLeftToday, lessonDone } from '../queue.js';
 import { todayStats } from '../stats.js';
 import { front, answer, playAudio, typeClass } from '../render.js';
 
@@ -30,9 +30,10 @@ export async function render(el, params) {
     const stats = await todayStats(now);
     const left = reviewsLeftToday(stats);
     const due = dueCards(now);
-    const learning = due.filter((c) => c.state === State.Learning || c.state === State.Relearning);
+    const learning = due.filter((c) => c.state === State.Learning || c.state === State.Relearning || lessonDone(c));
     const reviews = orderReviews(due.filter((c) => c.state === State.Review), now);
-    queue = [...learning.sort((a, b) => a.due - b.due), ...reviews.slice(0, left === Infinity ? undefined : left)].map((c) => c.id);
+    const at = (c) => c.due || c.introduced;
+    queue = [...learning.sort((a, b) => at(a) - at(b)), ...reviews.slice(0, left === Infinity ? undefined : left)].map((c) => c.id);
   }
 
   const s = {

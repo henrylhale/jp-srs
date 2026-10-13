@@ -30,9 +30,8 @@ export async function render(el) {
     <form class="panel" id="prefs">
       <h3>Daily limits</h3>
       ${field('New day starts at', sel('resetHour', Array.from({ length: 24 }, (_, h) => [h, `${String(h).padStart(2, '0')}:00`])))}
-      ${field('New items per day', num('newPerDay', 'min="0" max="500"'))}
+      ${field('New lessons per day', num('newPerDay', 'min="0" max="500"'), 'Items you mark “I know this” don’t count')}
       ${field('Max reviews per day', num('maxReviewsPerDay', 'min="0"'), '0 = no limit')}
-      ${field('Lesson batch size', num('lessonBatch', 'min="1" max="50"'))}
 
       <h3>Lessons</h3>
       ${field('Lesson order', sel('lessonOrder', [['wk-first', 'WaniKani first, then imported'], ['imported-first', 'Imported first'], ['interleave', 'Interleave']]))}

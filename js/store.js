@@ -9,7 +9,6 @@ export const DEFAULT_SETTINGS = {
   resetHour: 4,
   newPerDay: 10,
   maxReviewsPerDay: 0,
-  lessonBatch: 5,
   lessonOrder: 'wk-first', // wk-first | imported-first | interleave
   includeRadicals: true,
   ignorePrereqs: false,

@@ -15,7 +15,7 @@ export function render(el) {
     const cards = [...state.cards.values()].filter((c) => visible(state.subjects.get(c.id)));
     const npd = newPerDay ?? s.newPerDay;
     // All not-yet-started visible items, ignoring unlock order, approximate the lesson pool.
-    const pool = cards.filter((c) => c.state === State.New && !c.suspended && !c.burned).length;
+    const pool = cards.filter((c) => c.state === State.New && !c.introduced && !c.suspended && !c.burned).length;
     let series, legend;
     if (mode === 'sched') {
       const sch = scheduled(cards, now, days, s.resetHour);

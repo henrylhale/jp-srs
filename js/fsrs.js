@@ -120,7 +120,7 @@ export function grade(card, g, now, cfg) {
   if (card.state === State.New) {
     c.s = initStability(w, g);
     c.d = initDifficulty(w, g);
-    c.introduced = now;
+    c.introduced = card.introduced || now;
     const steps = cfg.learnSteps;
     if (g === Grade.Easy || steps.length === 0 || (g === Grade.Good && steps.length === 1)) {
       graduate(c.s);

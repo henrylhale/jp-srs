@@ -19,6 +19,10 @@ export function visible(subj) {
   return true;
 }
 
+// A lesson that has been read but not yet reviewed: it has left the lesson queue and
+// waits in reviews for its first grade, which initialises the FSRS state.
+export const lessonDone = (c) => c.state === State.New && c.introduced > 0;
+
 export function isPassed(card) {
   if (!card) return false;
   if (card.burned) return true;
@@ -34,6 +38,7 @@ export function cardStatus(card) {
   if (!card) return 'none';
   if (card.burned) return 'burned';
   if (card.suspended) return 'suspended';
+  if (lessonDone(card)) return 'learning';
   if (card.state === State.New) return 'new';
   if (card.state === State.Learning || card.state === State.Relearning) return 'learning';
   return isMature(card) ? 'mature' : 'young';
@@ -93,7 +98,7 @@ export function availableLessons() {
   const wk = [], imported = [];
   for (const s of state.subjects.values()) {
     const c = state.cards.get(s.id);
-    if (!c || c.state !== State.New || c.suspended || c.burned || !visible(s)) continue;
+    if (!c || c.state !== State.New || lessonDone(c) || c.suspended || c.burned || !visible(s)) continue;
     if (!isUnlocked(s, level)) continue;
     (s.src === 'wk' ? wk : imported).push(s);
   }
@@ -124,9 +129,9 @@ export function dueCards(now = Date.now(), { learnAhead = true } = {}) {
   const ahead = learnAhead ? state.settings.learnAheadMin * 60000 : 0;
   const out = [];
   for (const c of state.cards.values()) {
-    if (c.state === State.New || c.suspended || c.burned) continue;
+    if ((c.state === State.New && !lessonDone(c)) || c.suspended || c.burned) continue;
     const learning = c.state === State.Learning || c.state === State.Relearning;
-    if (c.due > now + (learning ? ahead : 0)) continue;
+    if (!lessonDone(c) && c.due > now + (learning ? ahead : 0)) continue;
     if (!visible(state.subjects.get(c.id))) continue;
     out.push(c);
   }

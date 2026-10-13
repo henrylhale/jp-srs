@@ -1,6 +1,7 @@
 import { html, mount, toast, fmtDate, fmtDuration, DAY } from '../util.js';
 import { state, saveCard, saveSubjects, deleteSubjects, byChars } from '../store.js';
 import { State, newCard, retrievability } from '../fsrs.js';
+import { lessonDone } from '../queue.js';
 import * as db from '../db.js';
 import { knownCard } from '../importApply.js';
 import { front, answer, statusPill, charsHtml, primaryMeaning, typeClass, breakdown } from '../render.js';
@@ -34,7 +35,7 @@ export async function render(el, params) {
       <section class="panel">
         <h4>Schedule</h4>
         ${card ? html`<dl class="kv">
-          <dt>State</dt><dd>${card.burned ? 'Burned' : STATE_NAME[card.state]}${card.suspended ? ' (suspended)' : ''}${card.leech ? ' · leech' : ''}</dd>
+          <dt>State</dt><dd>${card.burned ? 'Burned' : lessonDone(card) ? 'Lesson done, awaiting first review' : STATE_NAME[card.state]}${card.suspended ? ' (suspended)' : ''}${card.leech ? ' · leech' : ''}</dd>
           ${card.state !== State.New ? html`
             <dt>Due</dt><dd>${card.burned ? '—' : card.due <= now ? 'now' : `${fmtDate(card.due)} (in ${fmtDuration(card.due - now)})`}</dd>
             <dt>Stability</dt><dd>${card.s.toFixed(1)} days</dd>
@@ -63,7 +64,9 @@ export async function render(el, params) {
         <button class="btn primary" data-act="save">Save</button>
       </section>
       ${logs.length ? html`<section class="panel"><h4>History</h4><table class="log"><tr><th>When</th><th>Grade</th><th>State</th><th>Stability</th></tr>
-        ${logs.slice(0, 50).map((l) => html`<tr><td>${new Date(l.ts).toLocaleString()}</td><td class="g${l.grade}">${GRADE_NAME[l.grade]}</td><td>${STATE_NAME[l.prevState]}→${STATE_NAME[l.state]}</td><td>${l.s.toFixed(1)}d</td></tr>`)}
+        ${logs.slice(0, 50).map((l) => l.kind
+          ? html`<tr><td>${new Date(l.ts).toLocaleString()}</td><td colspan="3">${l.kind === 'known' ? 'Marked known in lessons' : 'Lesson'}</td></tr>`
+          : html`<tr><td>${new Date(l.ts).toLocaleString()}</td><td class="g${l.grade}">${GRADE_NAME[l.grade]}</td><td>${STATE_NAME[l.prevState]}→${STATE_NAME[l.state]}</td><td>${l.s.toFixed(1)}d</td></tr>`)}
       </table></section>` : ''}
     </div>`);
 
