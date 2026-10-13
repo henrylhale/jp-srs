@@ -24,7 +24,7 @@ export const DEFAULT_SETTINGS = {
   knownStability: 120,
   reviewOrder: 'random', // random | due | retrievability | type
   showIntervals: true,
-  autoplayAudio: false,
+  autoplay: true, // read the answer aloud on reveal
   leechLapses: 8,
   leechAction: 'tag', // tag | suspend
   learnAheadMin: 20,

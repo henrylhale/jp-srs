@@ -4,7 +4,7 @@ import { State, newCard, retrievability } from '../fsrs.js';
 import { lessonDone } from '../queue.js';
 import * as db from '../db.js';
 import { knownCard } from '../importApply.js';
-import { front, answer, statusPill, charsHtml, primaryMeaning, typeClass, breakdown } from '../render.js';
+import { front, answer, statusPill, charsHtml, primaryMeaning, typeClass, breakdown, audioButton } from '../render.js';
 import { kanjiInfo } from '../kanji.js';
 
 const STATE_NAME = ['New', 'Learning', 'Review', 'Relearning'];
@@ -111,7 +111,11 @@ function renderKanji(el, ch) {
   const wk = byChars(ch, ['kanji']).find((s) => s.src === 'wk');
   if (wk) { location.replace(`#/item/${encodeURIComponent(wk.id)}`); return; }
   const info = kanjiInfo(ch);
-  const pseudo = { id: `k:${ch}`, type: 'kanji', src: 'open', chars: ch, meanings: (info?.m || []).map((m, i) => ({ m, primary: i === 0 })), readings: [], aux: [] };
+  const pseudo = {
+    id: `k:${ch}`, type: 'kanji', src: 'open', chars: ch, aux: [],
+    meanings: (info?.m || []).map((m, i) => ({ m, primary: i === 0 })),
+    readings: (info?.on || []).map((r, i) => ({ r, primary: i === 0, kind: 'onyomi' })),
+  };
   const vocab = [...state.subjects.values()].filter((s) => s.type !== 'kanji' && s.chars?.includes(ch));
   mount(el, html`
     <header class="page-head"><a href="javascript:history.back()" class="icon-btn">←</a><h1 lang="ja">${ch}</h1></header>
@@ -120,6 +124,7 @@ function renderKanji(el, ch) {
       <div class="answer">
         <div class="meanings"><span class="primary">${info?.m?.[0] || ''}</span><span class="alt">${(info?.m || []).slice(1).join(', ')}</span></div>
         ${info ? html`<div class="readings"><div class="rgroup"><span class="rlabel">On'yomi</span> <span lang="ja">${(info.on || []).join('、')}</span></div><div class="rgroup"><span class="rlabel">Kun'yomi</span> <span lang="ja">${(info.kun || []).join('、')}</span></div></div>
+          ${audioButton(pseudo)}
           <p class="muted small">${info.s} strokes${info.f ? ` · frequency #${info.f}` : ''}${info.j ? ` · old JLPT ${info.j}` : ''}</p>` : ''}
         ${breakdown(pseudo)}
         <p class="muted small">Not in your WaniKani content (levels 1–${state.meta.user?.subscription?.max_level_granted ?? '?'}), so there is no kanji card for it.</p>

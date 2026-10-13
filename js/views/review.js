@@ -4,7 +4,8 @@ import { grade, preview, State } from '../fsrs.js';
 import * as db from '../db.js';
 import { dueCards, orderReviews, reviewsLeftToday, lessonDone } from '../queue.js';
 import { todayStats } from '../stats.js';
-import { front, answer, playAudio, typeClass } from '../render.js';
+import { front, answer, typeClass } from '../render.js';
+import { playSubject, stopAudio } from '../audio.js';
 
 let pendingQuiz = null;
 export function startLessonQuiz(ids) {
@@ -100,11 +101,18 @@ export async function render(el, params) {
             : html`<button class="reveal" id="reveal">Show answer <small>space</small></button>`}
         </div>
       </div>`);
-    if (s.revealed && state.settings.autoplayAudio && subj.audio?.length) playAudio(subj.audio[0].url);
     if (!s.revealed) $('#cardarea', el).scrollTop = 0;
   }
 
+  // Reveal is a user gesture, so autoplay is allowed here.
+  function reveal() {
+    s.revealed = true;
+    draw();
+    if (state.settings.autoplay) playSubject(state.subjects.get(s.current));
+  }
+
   async function doGrade(g) {
+    stopAudio();
     const id = s.current;
     const before = state.cards.get(id);
     const t = Date.now();
@@ -159,7 +167,7 @@ export async function render(el, params) {
 
   el.onclick = (e) => {
     const t = e.target.closest('button, a, summary, details');
-    if (e.target.closest('#reveal') || (!t && !s.revealed && s.current && e.target.closest('#cardarea'))) { s.revealed = true; draw(); return; }
+    if (e.target.closest('#reveal') || (!t && !s.revealed && s.current && e.target.closest('#cardarea'))) { reveal(); return; }
     const g = e.target.closest('[data-g]');
     if (g) { doGrade(+g.dataset.g); return; }
     if (e.target.closest('#undo')) { undo(); return; }
@@ -173,7 +181,7 @@ export async function render(el, params) {
   const onKey = (e) => {
     if (e.target.matches('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey) return;
     if (!s.current) return;
-    if (!s.revealed && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); s.revealed = true; draw(); return; }
+    if (!s.revealed && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); reveal(); return; }
     if (s.revealed && ['1', '2', '3', '4'].includes(e.key)) { e.preventDefault(); doGrade(+e.key); return; }
     if (s.revealed && e.key === ' ') { e.preventDefault(); doGrade(3); return; }
     if (e.key === 'z' || e.key === 'u') { e.preventDefault(); undo(); }
@@ -181,5 +189,5 @@ export async function render(el, params) {
   document.addEventListener('keydown', onKey);
 
   show();
-  return () => { document.removeEventListener('keydown', onKey); clearTimeout(s.timer); el.onclick = null; };
+  return () => { document.removeEventListener('keydown', onKey); clearTimeout(s.timer); stopAudio(); el.onclick = null; };
 }

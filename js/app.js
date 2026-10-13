@@ -1,7 +1,7 @@
 import { load, state } from './store.js';
 import { loadKanjiData } from './kanji.js';
 import { $, toast } from './util.js';
-import { playAudio } from './render.js';
+import { playPlan } from './audio.js';
 import * as dashboard from './views/dashboard.js';
 import * as lessons from './views/lessons.js';
 import * as review from './views/review.js';
@@ -68,8 +68,12 @@ async function init() {
   window.addEventListener('online', updateOnline);
   window.addEventListener('offline', updateOnline);
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-audio]');
-    if (btn) { e.preventDefault(); playAudio(btn.dataset.audio); }
+    const btn = e.target.closest('[data-tts]');
+    if (btn) {
+      e.preventDefault();
+      const d = btn.dataset;
+      playPlan({ url: navigator.onLine ? d.audioUrl || null : null, text: d.tts, lang: d.lang });
+    }
   });
   await Promise.all([load(), loadKanjiData().catch(() => toast('Kanji data failed to load'))]);
   applyTheme();

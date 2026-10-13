@@ -56,7 +56,7 @@ export async function render(el) {
       <h3>Reviews</h3>
       ${field('Review order', sel('reviewOrder', [['random', 'Random'], ['due', 'Oldest due first'], ['retrievability', 'Most forgotten first'], ['type', 'Radicals → kanji → vocab']]))}
       ${field('Show intervals on buttons', chk('showIntervals'))}
-      ${field('Autoplay audio', chk('autoplayAudio'), 'Needs a connection unless the clip was played before')}
+      ${field('Read answers aloud on reveal', chk('autoplay'), 'Vocab: WaniKani recording (online) or Japanese TTS; kanji: on’yomi via TTS; radicals: English name via TTS')}
       ${field('Learn ahead (minutes)', num('learnAheadMin', 'min="0" max="120"'))}
       ${field('Theme', sel('theme', [['auto', 'System'], ['light', 'Light'], ['dark', 'Dark']]))}
     </form>

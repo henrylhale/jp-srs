@@ -3,6 +3,7 @@ import { html, raw, esc, kanjiIn, fmtDuration } from './util.js';
 import { state, byChars } from './store.js';
 import { cardStatus } from './queue.js';
 import { kanjiInfo, componentMeaning, radicalName, phoneticSeries } from './kanji.js';
+import { audioPlan } from './audio.js';
 
 export const TYPE_LABEL = { radical: 'Radical', kanji: 'Kanji', vocab: 'Vocabulary', kana_vocab: 'Vocabulary' };
 const STATUS_LABEL = { new: 'New', learning: 'Learning', young: 'Young', mature: 'Mature', burned: 'Burned', suspended: 'Suspended', none: '—' };
@@ -57,9 +58,11 @@ function readingsBlock(s) {
   return html`<div class="readings">${s.readings.map((r, i) => html`${i ? '、' : ''}<span class="${r.primary ? 'primary' : 'alt'}" lang="ja">${r.r}</span>`)}</div>`;
 }
 
-function audioButton(s) {
-  if (!s.audio?.length) return '';
-  return html`<button class="icon-btn audio" data-audio="${s.audio[0].url}" aria-label="Play pronunciation">▶︎ audio</button>`;
+export function audioButton(s) {
+  const plan = audioPlan(s);
+  if (!plan) return '';
+  const label = s.type === 'radical' ? 'name' : s.type === 'kanji' ? "on'yomi" : 'reading';
+  return html`<button class="icon-btn audio" data-tts="${plan.text}" data-lang="${plan.lang}" data-audio-url="${plan.url || ''}" aria-label="Play pronunciation">▶︎ ${label}</button>`;
 }
 
 export function meaningsBlock(s) {
@@ -154,7 +157,3 @@ export function intervalLabel(due, now) {
   return fmtDuration(Math.max(0, due - now));
 }
 
-export function playAudio(url) {
-  const a = new Audio(url);
-  a.play().catch(() => {});
-}
