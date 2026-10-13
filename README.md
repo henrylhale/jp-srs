@@ -5,7 +5,7 @@ A personal WaniKani-style kanji/vocab reviewer. It installs as a PWA on Android 
 - **WaniKani content, FSRS scheduling.** Subjects (radicals, kanji, vocab, mnemonics, context sentences) come from the WaniKani API v2 with your own token. They are cached in IndexedDB and gated by your subscription's `max_level_granted`. Unlock order and level-ups follow WK rules: an item counts as "passed" once its FSRS stability reaches a threshold.
 - **Anki-style self-grading.** You see the prompt, reveal the answer, and grade Again / Hard / Good / Easy. FSRS-5 schedules the next review. You get learning and relearning steps, interval previews on the buttons, undo, leech handling and wrap-up.
 - **Skip what you know.** Every lesson has an "I know this" button, and the lesson queue has a bulk checklist. Import can mark everything known through level N. Known items are either burned or seeded into a late stage (about 120 days by default).
-- **Imports.** Sottaku (paste the Flashcard Management page), WaniKani SRS progress, and generic CSV/TSV/JSON or pasted lists. Imported words that match WK vocab take over that item's schedule. Anything else becomes an "imported" card.
+- **Imports.** WaniKani SRS progress (pulled on every sync), plus CSV/TSV/JSON or pasted lists with optional due dates, intervals, stages, status and tags. Imported words that match WK vocab take over that item's schedule. Anything else becomes an "imported" card.
 - **Kanji breakdown on the answer side.** For every kanji in a card it shows the classical radical, the KanjiVG components, and which component is the phonetic. It also shows that phonetic's series (other kanji sharing it, with their on'yomi), coloured by how well you know them.
 - **Kanji grid** by school grade, WK level or old JLPT level, with mature items highlighted. Kanji that are mature only through vocab can optionally count too.
 - **Forecast.** Shows scheduled load, or a Monte Carlo projection that includes new lessons per day and backlog under a daily review cap.
@@ -15,7 +15,7 @@ A personal WaniKani-style kanji/vocab reviewer. It installs as a PWA on Android 
 
 1. Open https://henrylhale.github.io/jp-srs/ in Chrome on Android, then use the menu to **Add to Home screen**.
 2. Go to Settings, paste a read-only WaniKani API token, and tap **Sync content**.
-3. Go to Import and bring in WaniKani progress, Sottaku, or a CSV.
+3. Optionally go to Import and bring in a CSV from another SRS.
 
 All progress lives on the device. Export a backup from Settings now and then.
 

@@ -1,15 +1,10 @@
 import { html, mount, $, toast, readFile } from '../util.js';
 import { state, saveCards } from '../store.js';
-import { parseSottaku, parseGeneric, summarize } from '../importers.js';
+import { parseGeneric, summarize } from '../importers.js';
 import { planImport, commitPlan, planKnownThroughLevel } from '../importApply.js';
 import { importAssignments } from '../wk.js';
 import { grantedLevel } from '../queue.js';
 import { charsHtml, primaryMeaning } from '../render.js';
-
-function localInput(t) {
-  const d = new Date(t - new Date(t).getTimezoneOffset() * 60000);
-  return d.toISOString().slice(0, 16);
-}
 
 const OPTIONS = html`
   <div class="opts">
@@ -39,22 +34,9 @@ export function render(el) {
 
     ${state.meta.syncedLevels ? '' : html`<div class="panel note">Sync WaniKani content first (Settings → Sync) so imported words can be matched to WK items. Anything imported before a sync is merged into matching WK items afterwards.</div>`}
 
-    <form class="panel" id="sottaku">
-      <h3>Sottaku</h3>
-      <p class="muted small">On sottaku.app open <b>Flashcards → Flashcard Management</b>, select the whole page, copy it, and paste it here (or save it as a .txt file). Due dates on that page are relative ("in 3 days"), so set when the copy was taken.</p>
-      <textarea name="text" rows="5" placeholder="Paste the flashcard overview page…"></textarea>
-      <div class="row gap wrap">
-        <input type="file" name="file" accept=".txt,text/plain">
-        <label class="small">Copied at <input type="datetime-local" name="when" value="${localInput(Date.now())}"></label>
-      </div>
-      ${OPTIONS}
-      <div class="row gap"><button class="btn" name="go" value="preview">Preview</button><button class="btn primary" name="go" value="apply">Import</button></div>
-      <div class="result"></div>
-    </form>
-
     <form class="panel" id="generic">
       <h3>CSV / TSV / JSON / pasted list</h3>
-      <p class="muted small">Columns are matched by header name: <code>word</code>, <code>reading</code>, <code>meaning</code>, plus optionally <code>due</code>, <code>interval</code> (days), <code>stability</code>, <code>stage</code> (1–9 or apprentice…burned), <code>status</code> (new/known/burned/suspended), <code>type</code>. Without a header, each line is read as <code>word⇥reading⇥meaning⇥interval</code>.</p>
+      <p class="muted small">Columns are matched by header name: <code>word</code>, <code>reading</code>, <code>meaning</code>, plus optionally <code>due</code>, <code>interval</code> (days), <code>stability</code>, <code>stage</code> (1–9 or apprentice…burned), <code>status</code> (new/known/burned/suspended), <code>type</code>, <code>tag</code>. Without a header, each line is read as <code>word⇥reading⇥meaning⇥interval</code>.</p>
       <textarea name="text" rows="5" placeholder="word,reading,meaning,interval&#10;学校,がっこう,school,30"></textarea>
       <div class="row gap wrap">
         <input type="file" name="file" accept=".csv,.tsv,.txt,.json">
@@ -95,10 +77,6 @@ export function render(el) {
     const file = f.get('file');
     if (file && file.size) text = await readFile(file);
     if (!text?.trim()) throw new Error('Paste something or choose a file first.');
-    if (form.id === 'sottaku') {
-      const when = f.get('when') ? new Date(f.get('when')).getTime() : Date.now();
-      return parseSottaku(text, when);
-    }
     return parseGeneric(text, Date.now(), f.get('defaultKind'));
   }
 
@@ -124,7 +102,7 @@ export function render(el) {
       }
       const rows = await rowsFor(form);
       const sum = summarize(rows);
-      const opts = { ...readOpts(form), tag: form.id === 'sottaku' ? 'sottaku' : 'import' };
+      const opts = { ...readOpts(form), tag: 'import' };
       const plan = planImport(rows, opts);
       if (go === 'apply') await commitPlan(plan);
       mount(out, html`

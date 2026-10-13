@@ -33,7 +33,7 @@ export async function render(el) {
         <h2>Get started</h2>
         <ol>
           <li>Add your WaniKani API token in <a href="#/settings">Settings</a> and tap <b>Sync content</b>. This also brings in your WaniKani progress.</li>
-          <li>Optionally <a href="#/import">import</a> from Sottaku or a CSV.</li>
+          <li>Optionally <a href="#/import">import</a> other SRS state from a CSV.</li>
           <li>Install it: browser menu → <b>Add to Home screen</b>. Everything works offline after the first sync.</li>
         </ol>
       </div>` : ''}

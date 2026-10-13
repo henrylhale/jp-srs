@@ -80,7 +80,7 @@ export function planImport(rows, opts, now = Date.now()) {
     } else {
       if (opts.unmatched === 'skip') { plan.stats.skipped++; continue; }
       const id = customId(row.chars, row.reading);
-      subj = state.subjects.get(id) || makeCustomSubject(row, order++, opts.tag);
+      subj = state.subjects.get(id) || makeCustomSubject(row, order++, row.tag || opts.tag);
       if (!state.subjects.has(id)) plan.subjects.push(subj);
       card = plan.cards.get(id) || state.cards.get(id) || newCard(id);
       if (!opts.overwrite && card.state !== State.New && !plan.cards.has(id)) { plan.stats.unchanged++; continue; }

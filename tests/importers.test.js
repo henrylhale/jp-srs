@@ -1,20 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseSottaku, parseGeneric, parseRelative, estimateInterval, summarize } from '../js/importers.js';
+import { parseGeneric, parseRelative, estimateInterval, summarize } from '../js/importers.js';
 
 const NOW = Date.parse('2026-10-12T18:00:00');
 const DAY = 86400000;
-
-// Synthetic sample in the shape of Sottaku's flashcard overview page.
-const SAMPLE = [
-  'Select All (4 flashcards)', 'Kanji', '', 'Reading', '', 'English', '',
-  '\t', '学校', 'がっこう', 'school', 'in 2 days\t54 days ago\tAug 19, 2026\t', '👁', '', '',
-  '\t', '見る', 'みる', 'to see', 'in 122 days\t54 days ago\tAug 19, 2026\t', '👁', '', '',
-  '\t', '切手', 'きって', 'postage stamp', '22 days ago\t22 days ago\tSep 20, 2026\t', '👁', '', '',
-  '\t', 'わけだ', 'わけだ', "that's why", '⏸\t48 days ago\tAug 25, 2026\t', '👁', '', '',
-  '\t', '雨', 'あめ', 'rain', '3 hours ago\t40 days ago\tAug 19, 2026\t', '👁', '',
-  '© 2025-2026 Sottaku Inc',
-].join('\n');
 
 test('relative times', () => {
   assert.equal(parseRelative('in 3 days', NOW), NOW + 3 * DAY);
@@ -32,16 +21,20 @@ test('interval estimate is bounded by card age', () => {
   assert.ok(long > 122 && long <= 176);
 });
 
-test('parses the Sottaku overview page', () => {
-  const rows = parseSottaku(SAMPLE, NOW);
-  assert.deepEqual(summarize(rows), { total: 5, learned: 3, new: 1, paused: 1, known: 0, burned: 0 });
+test('CSV with absolute due dates, intervals, status and tag', () => {
+  const csv = [
+    'word,reading,meaning,due,interval,status,tag',
+    '学校,がっこう,school,2026-10-14T18:00+00:00,4,,mine',
+    '知らせる,しらせる,"to inform, to notify",,,new,mine',
+    'わけだ,わけだ,that\'s why,,,suspended,mine',
+  ].join('\n');
+  const rows = parseGeneric(csv, NOW);
+  assert.deepEqual(summarize(rows), { total: 3, learned: 1, new: 1, paused: 1, known: 0, burned: 0 });
   const school = rows.find((r) => r.chars === '学校');
-  assert.equal(school.reading, 'がっこう');
-  assert.equal(school.meaning, 'school');
-  assert.equal(school.due, NOW + 2 * DAY);
-  assert.equal(rows.find((r) => r.chars === '切手').kind, 'new');
-  assert.equal(rows.find((r) => r.chars === 'わけだ').kind, 'paused');
-  assert.equal(rows.find((r) => r.chars === '雨').kind, 'learned');
+  assert.equal(school.due, Date.parse('2026-10-14T18:00+00:00'));
+  assert.equal(school.ivl, 4);
+  assert.equal(school.tag, 'mine');
+  assert.equal(rows.find((r) => r.chars === '知らせる').meaning, 'to inform, to notify');
 });
 
 test('generic CSV with header and stages', () => {

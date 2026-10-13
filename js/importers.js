@@ -8,7 +8,7 @@
 const DAY = 86400000;
 const UNIT_MS = { minute: 60000, hour: 3600000, day: DAY, week: 7 * DAY, month: 30 * DAY, year: 365 * DAY };
 
-/** Parse Sottaku-style relative times ("in 3 days", "22 days ago", "tomorrow"). */
+/** Parse relative times ("in 3 days", "22 days ago", "tomorrow"). */
 export function parseRelative(text, now) {
   const t = text.trim().toLowerCase();
   if (!t) return null;
@@ -29,11 +29,10 @@ function parseDate(text) {
 }
 
 /**
- * Estimate the current interval of a learned card from its due date, the date it was
- * added and when the snapshot was taken. A snapshot lands at a uniformly random point
- * inside the current interval, so on average half of it has elapsed: ivl ~= 2*(due-now),
- * bounded by the card's age. Overdue cards: assume the last review was halfway between
- * being added and falling due.
+ * Estimate the current interval of a card from its due date (and, if known, the date it
+ * was added). A snapshot lands at a uniformly random point inside the current interval,
+ * so on average half of it has elapsed: ivl ~= 2*(due-now), bounded by the card's age.
+ * Overdue cards: assume the last review was halfway between being added and falling due.
  */
 export function estimateInterval({ due, added, now }) {
   const age = added ? Math.max(1, (due - added) / DAY) : null;
@@ -42,50 +41,6 @@ export function estimateInterval({ due, added, now }) {
     return age ? Math.max(1, Math.min(est, age)) : est;
   }
   return age ? Math.max(1, Math.min(60, age / 2)) : 1;
-}
-
-const DUE_LINE = /^(⏸|in\s+\d+\s+\w+|\d+\s+\w+\s+ago|an?\s+\w+\s+ago|in\s+an?\s+\w+|tomorrow|yesterday|today|now)\t/i;
-
-/**
- * Parse the text of Sottaku's "Flashcard overview" page (select-all + copy).
- * Each card renders as: word / reading / meaning lines, then
- *   "<recognition due>\t<handwriting due>\t<date added>\t".
- */
-export function parseSottaku(text, now = Date.now()) {
-  const lines = text.replace(/\r/g, '').split('\n');
-  const rows = [];
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (!DUE_LINE.test(line)) continue;
-    const [recog, hand, addedText] = line.split('\t').map((s) => s.trim());
-    const prev = [];
-    for (let j = i - 1; j >= 0 && prev.length < 3; j--) {
-      const l = lines[j].trim();
-      if (l) prev.unshift(l);
-      else if (prev.length) break;
-    }
-    if (prev.length < 2) continue;
-    const [chars, reading, meaning] = prev.length === 3 ? prev : [prev[0], prev[0], prev[1]];
-    const added = parseDate(addedText);
-    const row = { chars, reading, meaning: meaning || '', added, source: 'sottaku' };
-    if (recog === '⏸') {
-      row.kind = 'paused';
-    } else {
-      const due = parseRelative(recog, now);
-      if (due == null) continue;
-      // Never-studied cards are due from the moment they were added, and both
-      // recognition and handwriting show the same timestamp.
-      const untouched = due <= now && recog === hand && added != null && Math.abs(due - added) < 2 * DAY;
-      if (untouched) row.kind = 'new';
-      else {
-        row.kind = 'learned';
-        row.due = due;
-        row.ivl = estimateInterval({ due, added, now });
-      }
-    }
-    rows.push(row);
-  }
-  return dedupe(rows);
 }
 
 // Keep one row per (chars, reading): prefer learned, then the later due date.
@@ -110,6 +65,7 @@ const FIELD_ALIASES = {
   stage: ['stage', 'srs stage', 'srs_stage', 'srs'],
   status: ['status', 'state'],
   type: ['type', 'kind'],
+  tag: ['tag', 'tags', 'deck', 'source'],
 };
 
 const STAGES = { apprentice: 2, guru: 5, master: 7, enlightened: 8, burned: 9 };
@@ -153,7 +109,7 @@ function mapHeader(cells) {
 function rowFromRecord(rec, now, defaultKind) {
   const chars = (rec.chars || '').trim();
   if (!chars) return null;
-  const row = { chars, reading: (rec.reading || '').trim(), meaning: (rec.meaning || '').trim(), typeHint: rec.type?.toLowerCase(), source: 'generic' };
+  const row = { chars, reading: (rec.reading || '').trim(), meaning: (rec.meaning || '').trim(), typeHint: rec.type?.toLowerCase(), tag: (rec.tag || '').trim() || null };
   const status = (rec.status || '').toLowerCase();
   let stage = rec.stage != null && rec.stage !== '' ? String(rec.stage).toLowerCase() : null;
   if (stage && STAGES[stage]) stage = STAGES[stage];
