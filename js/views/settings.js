@@ -118,7 +118,7 @@ export async function render(el) {
       try {
         const r = await syncSubjects((m) => { msg.textContent = m; });
         const m = await mergeImportedIntoWk();
-        msg.textContent = `Synced ${r.fetched} updated subjects (levels 1–${r.granted}).${m.removed ? ` Merged ${m.removed} imported cards into matching WaniKani items.` : ''}`;
+        msg.textContent = `Synced ${r.fetched} updated subjects (levels 1–${r.granted}); seeded ${r.seeded} cards from your WaniKani progress.${m.removed ? ` Merged ${m.removed} imported cards into matching WaniKani items.` : ''}`;
         setTimeout(() => render(el), 4000);
       } catch (err) { msg.textContent = err.message; }
     }

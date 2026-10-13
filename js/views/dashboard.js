@@ -32,8 +32,8 @@ export async function render(el) {
       <div class="panel onboard">
         <h2>Get started</h2>
         <ol>
-          <li>Add your WaniKani API token in <a href="#/settings">Settings</a> and tap <b>Sync</b>.</li>
-          <li>Bring over your progress: <a href="#/import">Import</a> from Sottaku, WaniKani or a CSV.</li>
+          <li>Add your WaniKani API token in <a href="#/settings">Settings</a> and tap <b>Sync content</b>. This also brings in your WaniKani progress.</li>
+          <li>Optionally <a href="#/import">import</a> from Sottaku or a CSV.</li>
           <li>Install it: browser menu → <b>Add to Home screen</b>. Everything works offline after the first sync.</li>
         </ol>
       </div>` : ''}

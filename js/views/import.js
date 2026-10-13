@@ -83,7 +83,7 @@ export function render(el) {
 
     <form class="panel" id="wkprog">
       <h3>WaniKani progress</h3>
-      <p class="muted small">Seed schedules from your WaniKani SRS stages (Apprentice → hours/days, Guru ≈ 1–2 weeks, Master ≈ 1 month, Enlightened ≈ 4 months, Burned → burned). Needs a connection.</p>
+      <p class="muted small">Sync content does this automatically for items you haven't started here. Use this to re-import, e.g. with overwrite. Seeds schedules from your WaniKani SRS stages (Apprentice → hours/days, Guru ≈ 1–2 weeks, Master ≈ 1 month, Enlightened ≈ 4 months, Burned → burned). Needs a connection.</p>
       <label class="check"><input type="checkbox" name="overwrite"> overwrite items I've already started here</label>
       <div class="row gap"><button class="btn primary" name="go" value="apply">Import WK progress</button></div>
       <div class="result"></div>
@@ -119,7 +119,7 @@ export function render(el) {
       if (form.id === 'wkprog') {
         mount(out, html`<p class="muted">Working…</p>`);
         const r = await importAssignments({ overwrite: new FormData(form).get('overwrite') === 'on' }, (m) => mount(out, html`<p class="muted">${m}</p>`));
-        mount(out, html`<p>Read ${r.seen} assignments, updated <b>${r.updated}</b> cards.</p>`);
+        mount(out, html`<p>Read ${r.seen} assignments, updated <b>${r.updated}</b> cards.${r.missing ? html` ${r.missing} belong to content not synced yet. Run Sync content, then try again.` : ''}</p>`);
         return;
       }
       const rows = await rowsFor(form);

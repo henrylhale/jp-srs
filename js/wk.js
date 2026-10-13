@@ -92,7 +92,10 @@ export async function syncSubjects(onProgress = () => {}) {
   }
   invalidateIndex();
   await saveMeta({ lastSubjectSync: started, syncedLevels: granted });
-  return { fetched: n, granted, username: user.username };
+  // Pull WK progress too. Only cards not yet started here are touched, so re-syncing is safe.
+  onProgress('Importing your WaniKani progress…');
+  const progress = await importAssignments({}, onProgress);
+  return { fetched: n, granted, username: user.username, seeded: progress.updated };
 }
 
 // WK SRS stage -> approximate FSRS stability (days) for seeding.
@@ -105,15 +108,19 @@ const STAGE_STABILITY = { 1: 0.2, 2: 0.4, 3: 1, 4: 2, 5: 7, 6: 14, 7: 30, 8: 120
 export async function importAssignments({ overwrite = false } = {}, onProgress = () => {}) {
   const token = state.settings.token.trim();
   if (!token) throw new Error('Add your WaniKani API token in Settings first.');
+  if (![...state.subjects.values()].some((x) => x.src === 'wk')) {
+    throw new Error('No WaniKani content on this device yet. Run Settings → Sync content first.');
+  }
   const now = Date.now();
   const updates = [];
-  let seen = 0;
+  let seen = 0, missing = 0;
   for await (const page of pages('/assignments?started=true', token)) {
     for (const a of page.data) {
       seen++;
       const id = `wk:${a.data.subject_id}`;
       const card = state.cards.get(id);
-      if (!card || (!overwrite && card.state !== State.New)) continue;
+      if (!card) { missing++; continue; }
+      if (!overwrite && card.state !== State.New) continue;
       const stage = a.data.srs_stage;
       if (stage === 0) continue;
       if (stage >= 9) {
@@ -131,5 +138,5 @@ export async function importAssignments({ overwrite = false } = {}, onProgress =
     onProgress(`Read ${seen} assignments…`);
   }
   await saveCards(updates);
-  return { seen, updated: updates.length };
+  return { seen, updated: updates.length, missing };
 }

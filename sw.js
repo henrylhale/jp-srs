@@ -1,6 +1,6 @@
 // Offline support: precache the app shell + kanji data; cache WK radical images on
 // first use. WK API calls are never cached here; that data lives in IndexedDB.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = `shell-${VERSION}`;
 const MEDIA = 'wk-media';
 
